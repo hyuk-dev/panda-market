@@ -25,11 +25,11 @@ export default function ItemsPage() {
   const [page, setPage] = useState(1);
   const [orderBy, setOrderBy] = useState("recent");
 
-  useEffect(()=> {
-    if(width >= 1280) setPageSize(10);
-    else if(width >= 768) setPageSize(6);
+  useEffect(() => {
+    if (width >= 1280) setPageSize(10);
+    else if (width >= 768) setPageSize(6);
     else setPageSize(4);
-  }, [width])
+  }, [width]);
 
   const router = useRouter();
   const debounceSearchVal = useDebounce<string>(searchVal, 1000);
@@ -41,7 +41,12 @@ export default function ItemsPage() {
   const products = data?.list; // 상품 데이터가 저장됨
   const totalCount = data?.totalCount; // 총 데이터 수가 저장됨
 
-  async function getItems(searchVal : string, pageSize: number, page: number, orderBy: string) {
+  async function getItems(
+    searchVal: string,
+    pageSize: number,
+    page: number,
+    orderBy: string
+  ) {
     const res = await api.get<ProductList>(
       `https://panda-market-api.vercel.app/products/?keyword=${searchVal}&pageSize=${pageSize}&page=${page}&orderBy=${orderBy}`
     );
@@ -86,15 +91,20 @@ export default function ItemsPage() {
           {products &&
             products.map((product, index) => {
               return (
-                <Link href={`/items/${product.id}`}>
-                  <Product product={product} key={index} />
+                <Link href={`/items/${product.id}`} key={index}>
+                  <Product product={product} />
                 </Link>
               );
             })}
         </div>
         <div className="flex justify-center mt-8">
           <div className="flex gap-1">
-            <SelectPage page={page} setPage={setPage} pageSize={pageSize} totalCount={totalCount ?? 1}/>
+            <SelectPage
+              page={page}
+              setPage={setPage}
+              pageSize={pageSize}
+              totalCount={totalCount ?? 1}
+            />
           </div>
         </div>
       </div>
