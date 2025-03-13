@@ -199,8 +199,8 @@ export default function ItemDetailPage() {
                   상품 태그
                 </div>
                 <div className="flex gap-3">
-                  {product.tags.map((tag) => {
-                    return <TagView>{tag}</TagView>;
+                  {product.tags.map((tag, index) => {
+                    return <TagView key={index}>{tag}</TagView>;
                   })}
                 </div>
               </div>

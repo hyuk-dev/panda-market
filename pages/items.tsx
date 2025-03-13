@@ -84,10 +84,10 @@ export default function ItemsPage() {
         )}
         <div className="grid xl:grid-cols-5 md:grid-cols-3 grid-cols-2 gap-6">
           {products &&
-            products.map((product) => {
+            products.map((product, index) => {
               return (
                 <Link href={`/items/${product.id}`}>
-                  <Product product={product} />
+                  <Product product={product} key={index} />
                 </Link>
               );
             })}
