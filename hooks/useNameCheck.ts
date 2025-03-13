@@ -11,7 +11,7 @@ interface UseNameCheckReturn {
   handleNameInputChange : (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export function useNameCheck (nameInitial : string) : UseNameCheckReturn {
+export function useNameCheck (nameInitial : string = "") : UseNameCheckReturn {
     const [name, setName] = useState<Name['name']>(nameInitial);
     const [nameCheck, setNameCheck] = useState<Name['nameCheck']>('first');
 

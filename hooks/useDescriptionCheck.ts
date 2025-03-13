@@ -11,7 +11,7 @@ interface UseDescriptionReturn {
   handleDescriptionInputChange: ChangeEventHandler<HTMLTextAreaElement>;
 }
 
-export function useDescriptionCheck(descriptionInitial : string): UseDescriptionReturn {
+export function useDescriptionCheck(descriptionInitial : string = ""): UseDescriptionReturn {
   const [description, setDescription] = useState<Description['description']>(descriptionInitial);
   const [descriptionCheck, setDescriptionCheck] = useState<Description['descriptionCheck']>('first');
 

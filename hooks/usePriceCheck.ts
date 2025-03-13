@@ -5,7 +5,7 @@ interface UsePriceCheckReturn {
   priceCheck: string;
   handlePriceInputChange : (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
-export function usePriceCheck (priceInitial : string): UsePriceCheckReturn {
+export function usePriceCheck (priceInitial : string = ""): UsePriceCheckReturn {
     type Price = string;
     type PriceCheck = string;
     const [price, setPrice] = useState<Price>(priceInitial);
