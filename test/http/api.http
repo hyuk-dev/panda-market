@@ -1,0 +1,10 @@
+POST https://panda-market-api.vercel.app/auth/signin
+Content-Type: application/json
+
+{
+  "email": "zzzz@naver.com",
+  "password": "zzzz123!"
+}
+
+###
+GET https://panda-market-api.vercel.app/user/me
