@@ -13,6 +13,7 @@ import ProductComment from "@/types/productComment";
 import api from "@/utils/axiosInstance";
 import {
   QueryKey,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -20,11 +21,12 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { comment } from "postcss";
 import { useContext, useEffect, useState } from "react";
 
 interface ProductCommentData {
   list: ProductComment[];
-  nextCursor: number;
+  nextCursor: number | null | undefined;
 }
 
 export default function ItemDetailPage() {
@@ -39,7 +41,7 @@ export default function ItemDetailPage() {
     },
     enabled: !!id,
   });
-  console.log(data);
+
   const product = data as ProductCard;
   const { userData } = useContext(AuthContext);
   const [imgError, setImgError] = useState(true);
@@ -57,26 +59,45 @@ export default function ItemDetailPage() {
     else setIsVerified(false);
   }, [content]);
 
-  async function getComments({ queryKey }: { queryKey: QueryKey }) {
+  async function getComments({
+    pageParam,
+    queryKey,
+  }: {
+    pageParam: number;
+    queryKey: QueryKey;
+  }) {
     const [, productId] = queryKey;
-    console.log("Fetching comments for product:", productId);
-    if (!productId) return []; // productId가 없으면 빈 배열 반환
-    const res = await api.get(
-      `https://panda-market-api.vercel.app/products/${productId}/comments/?limit=10`
+    if (!productId) return { list: [], nextCursor: null }; // productId가 없으면 빈 배열 반환
+    const res = await api.get<ProductCommentData>(
+      `https://panda-market-api.vercel.app/products/${productId}/comments/?limit=5&cursor=${pageParam}`
     );
-    return res.data;
+    return {
+      list: res.data.list,
+      nextCursor: res.data.nextCursor ?? undefined,
+    };
   }
 
-  const { data: commentData } = useQuery<ProductCommentData>({
+  const {
+    data: commentData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery<ProductCommentData>({
     queryKey: ["comments", product?.id],
-    queryFn: getComments,
+    queryFn: ({ pageParam, queryKey }) => {
+      return getComments({
+        pageParam: pageParam as number,
+        queryKey: queryKey as QueryKey,
+      });
+    },
     enabled: !!product?.id,
     staleTime: 1000 * 60 * 5, // 5분 동안 캐싱된 데이터 사용
     gcTime: 1000 * 60 * 10,
-    placeholderData: { list: [], nextCursor: 0 },
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    initialPageParam: 0,
   });
 
-  console.log("댓글 데이터:", commentData);
+  const comments = commentData?.pages.flatMap((page) => page.list) ?? [];
 
   async function postCommit() {
     setIsVerified(false);
@@ -106,13 +127,12 @@ export default function ItemDetailPage() {
     }
   }
 
-  
   async function favoritePost() {
     try {
       await api.post(
         `https://panda-market-api.vercel.app/products/${product.id}/favorite`
       );
-      queryClient.invalidateQueries({ queryKey: ["product", id]})
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
     } catch (err) {
       console.log(err);
     }
@@ -123,13 +143,11 @@ export default function ItemDetailPage() {
       await api.delete(
         `https://panda-market-api.vercel.app/products/${product.id}/favorite`
       );
-      queryClient.invalidateQueries({ queryKey: ["product", id]})
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
     } catch (err) {
       console.log(err);
     }
   }
-
-
 
   if (isLoading)
     return (
@@ -160,6 +178,7 @@ export default function ItemDetailPage() {
               fill
               onError={() => setImgError(true)}
               onLoadingComplete={() => setImgError(false)}
+              objectFit="cover"
             />
           </div>
           <div className="flex flex-col gap-[62px] w-full">
@@ -170,7 +189,7 @@ export default function ItemDetailPage() {
                     {product.name}
                   </div>
                   <div className="text-[40px] font-semibold">
-                    {product.price.toLocaleString('ko-KR')}원
+                    {product.price.toLocaleString("ko-KR")}원
                   </div>
                 </div>
                 <div>
@@ -224,7 +243,10 @@ export default function ItemDetailPage() {
 
               {product.isFavorite ? (
                 <div className="flex items-center border-l pl-6">
-                  <div onClick={() => favoriteDelete()} className="cursor-pointer flex gap-1 border px-[12px] py-[4px] rounded-[35px] text-[#6B7280] text-[16px]">
+                  <div
+                    onClick={() => favoriteDelete()}
+                    className="cursor-pointer flex gap-1 border px-[12px] py-[4px] rounded-[35px] text-[#6B7280] text-[16px]"
+                  >
                     <div className="relative w-[26.8px] h-[23.3px]">
                       <Image
                         src="/imgs/ic_heart_clicked.png"
@@ -238,7 +260,10 @@ export default function ItemDetailPage() {
                 </div>
               ) : (
                 <div className="flex items-center border-l pl-6">
-                  <div onClick={() => favoritePost()} className="cursor-pointer flex gap-1 border px-[12px] py-[4px] rounded-[35px] text-[#6B7280] text-[16px]">
+                  <div
+                    onClick={() => favoritePost()}
+                    className="cursor-pointer flex gap-1 border px-[12px] py-[4px] rounded-[35px] text-[#6B7280] text-[16px]"
+                  >
                     <div className="relative w-[26.8px] h-[23.3px]">
                       <Image
                         src="/imgs/ic_heart.png"
@@ -274,7 +299,7 @@ export default function ItemDetailPage() {
           </div>
         </div>
         <div className="flex flex-col gap-[40px]">
-          {commentData?.list.map((comment, index) => {
+          {comments.map((comment, index) => {
             return (
               <ProductCommentElement
                 comment={comment}
@@ -283,7 +308,12 @@ export default function ItemDetailPage() {
               />
             );
           })}
-          {commentData?.list.length === 0 && (
+          { hasNextPage &&
+            <div className="flex justify-center" onClick={() => fetchNextPage()}>
+            <div className="text-slate-500 bg-slate-50 p-2 rounded-xl cursor-pointer">댓글 더보기</div>
+          </div>
+          }
+          {comments.length === 0 && (
             <div className="flex flex-col gap-5 items-center">
               <div className="relative w-[140px] h-[140px]">
                 <Image

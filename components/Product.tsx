@@ -6,7 +6,7 @@ interface ProductProps {
 }
 
 export default function Product({ product }: ProductProps) {
-  const [isError, setIsError] = useState(false);
+  const [isError, setIsError] = useState(true);
 
   useEffect(() => {
     setIsError(false);
@@ -25,7 +25,7 @@ export default function Product({ product }: ProductProps) {
           fill
           objectFit="cover"
           onError={() => setIsError(true)}
-
+          onLoadingComplete={() => setIsError(false)}
           className="rounded-[13px]"
         />
       </div>

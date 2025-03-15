@@ -16,9 +16,9 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname() || ""; // 현재 경로를 보기 위해서
   const queryClient = useQueryClient();
-  const cachedUserData = queryClient.getQueryData<UserCard>(["userData"]);
   const { userData, isLoading = true } = useContext(AuthContext);
-  const user = cachedUserData || userData;
+  
+  const user = userData;
   console.log(user);
 
   useEffect(() => {

@@ -87,7 +87,7 @@ export default function RegisterPage() {
     } catch (err) {
       const error = err as AxiosError;
       if (error.response?.status === 400) {
-        setModalMessage("사용 중인 이메일입니다.");
+        setModalMessage(error.response.data.message);
         setIsModal(true);
       } else {
         setModalMessage("회원가입 도중 알 수 없는 에러가 발생하였습니다.");
